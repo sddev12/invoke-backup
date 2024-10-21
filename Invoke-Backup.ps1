@@ -35,8 +35,25 @@ $ErrorActionPreference = 'Stop'
 
 #TODO: Switch to using yaml config file as it is cleaner than having to write json
 function Read-ConfigFile($ConfigFile) {
+  if (-not(Test-Path $ConfigFile)) {
+    Write-Error "Config file does not exist`n"
+    exit 1
+  }
+
   $jsonConfig = Get-Content -Path $ConfigFile
-  return $jsonConfig | ConvertFrom-Json
+  if ($jsonConfig.Length -eq 0) {
+    Write-Error "Empty config file provided"
+    exit 1
+  }
+
+  try {
+    $parsedConfigFile = $jsonConfig | ConvertFrom-Json
+  }
+  catch {
+    Write-Error ("Config file is not valid Json: {0}" -f $_)
+    exit 1
+  }
+  return $parsedConfigFile
 }
 
 function Test-InputFolders($InputFolders) {
@@ -81,12 +98,6 @@ function Copy-Content($Config) {
 }
 
 ## Main Execution - Start
-
-# Validate params
-if (-not(Test-Path $ConfigFile)) {
-  Write-Error "Config file does not exist`n"
-  exit 1
-}
 
 # Read and parse Json config file
 $Config = Read-ConfigFile -ConfigFile $ConfigFile
