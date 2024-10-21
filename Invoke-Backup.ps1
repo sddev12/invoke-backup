@@ -6,7 +6,7 @@
   The script reads in a json config file in which you declare the input folders you would like to copy the contents of
   and the output folder to copy the content to. 
 
-  The config file should be structured as below where inputs declare the folders to copy from and output declares the foler to copy to:
+  The config file should be structured as below where inputs declare the folders to copy from and output declares the folder to copy to:
 
   {
     "inputs": [
