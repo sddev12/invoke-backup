@@ -33,6 +33,16 @@ param (
 
 $ErrorActionPreference = 'Stop'
 
+function Remove-TrailingBackslash($Config) {
+  for ($i = 0; $i -lt $Config.inputs.Length; $i++) {
+    if ($Config.inputs[$i] -like "*\") {
+      $Config.inputs[$i] = $Config.inputs[$i].TrimEnd('\')
+    }
+  }
+
+  return $Config
+}
+
 #TODO: Switch to using yaml config file as it is cleaner than having to write json
 function Read-ConfigFile($ConfigFile) {
   if (-not(Test-Path $ConfigFile)) {
@@ -40,26 +50,29 @@ function Read-ConfigFile($ConfigFile) {
     exit 1
   }
 
-  $jsonConfig = Get-Content -Path $ConfigFile
-  if ($jsonConfig.Length -eq 0) {
+  $JsonConfig = Get-Content -Path $ConfigFile
+  if ($JsonConfig.Length -eq 0) {
     Write-Error "Empty config file provided"
     exit 1
   }
 
   try {
-    $parsedConfigFile = $jsonConfig | ConvertFrom-Json
+    $Config = $JsonConfig | ConvertFrom-Json
   }
   catch {
     Write-Error ("Config file is not valid Json: {0}" -f $_)
     exit 1
   }
-  return $parsedConfigFile
+
+  $Config = Remove-TrailingBackslash -Config $Config
+
+  return $Config
 }
 
 function Test-InputFolders($InputFolders) {
-  foreach ($folder in $InputFolders) {
-    if (-not(Test-Path $folder)) {
-      Write-Error ("Input folder {0} does not exist`n" -f $folder)
+  foreach ($Folder in $InputFolders) {
+    if (-not(Test-Path $Folder)) {
+      Write-Error ("Input folder {0} does not exist`n" -f $Folder)
       exit 1
     }
   }
@@ -81,17 +94,17 @@ function Test-OutputFolder($OutputFolder) {
 
 #TODO: Implement multi-threading using PowerShell Jobs as this is slow for large sets of files
 function Copy-Content($Config) {
-  foreach ($folder in $Config.inputs) {
+  foreach ($Folder in $Config.inputs) {
     # Build outpath
-    $outFolder = Split-Path -Path $folder -Leaf
-    $outPath = "{0}\{1}" -f $Config.output, $outFolder
-    Write-Host ("Copying contents of {0} to {1}`n" -f $folder, $outPath) -ForegroundColor Cyan
+    $OutFolder = Split-Path -Path $Folder -Leaf
+    $OutPath = "{0}\{1}" -f $Config.output, $OutFolder
+    Write-Host ("Copying contents of {0} to {1}`n" -f $Folder, $OutPath) -ForegroundColor Cyan
     try {
-      Copy-Item -Path $folder -Destination $outPath -Recurse -Force
-      Write-Host ("Copy of {0} to {1} successful`n" -f $folder, $outPath) -ForegroundColor Green
+      Copy-Item -Path $Folder -Destination $OutPath -Recurse -Force
+      Write-Host ("Copy of {0} to {1} successful`n" -f $Folder, $OutPath) -ForegroundColor Green
     }
     catch {
-      Write-Error ("Failed to backup {0}: {1}`n" -f $folder, $_)
+      Write-Error ("Failed to backup {0}: {1}`n" -f $Folder, $_)
       exit 1
     }
   }
@@ -103,8 +116,8 @@ function Copy-Content($Config) {
 $Config = Read-ConfigFile -ConfigFile $ConfigFile
 
 # Validate input and output folders
-Test-InputFolders -InputFolders $config.inputs
-Test-OutputFolder -OutputFolder $config.output
+Test-InputFolders -InputFolders $Config.inputs
+Test-OutputFolder -OutputFolder $Config.output
 
 Write-Host "`nInput and output folders validated`n" -ForegroundColor Green
 

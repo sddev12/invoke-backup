@@ -1,7 +1,7 @@
 {
   "inputs": [
-    "<INPUT_FOLDER_ONE>",
-    "<INPUT_FOLDER_TWO>"
+    "C:\\Backups",
+    "C:\\dev"
   ],
-  "output": "<OUTPUT_FOLDER>"
+  "output": "D:\\"
 }
