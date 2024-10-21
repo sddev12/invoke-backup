@@ -36,7 +36,7 @@ $ErrorActionPreference = 'Stop'
 #TODO: Switch to using yaml config file as it is cleaner than having to write json
 function Read-ConfigFile($ConfigFile) {
   if (-not(Test-Path $ConfigFile)) {
-    Write-Error "Config file does not exist`n"
+    Write-Error ("Config file {0} does not exist`n" -f $ConfigFile)
     exit 1
   }
 
